@@ -16,7 +16,7 @@ from openpyxl.utils import get_column_letter
 # ============================================================
 
 st.set_page_config(
-    page_title="澳森托嬰中心｜AI 觀察紀錄產生器",
+    page_title="澳森托嬰中心｜觀察紀錄",
     page_icon="📝",
     layout="wide",
     initial_sidebar_state="collapsed",
