@@ -1,4 +1,5 @@
 import io
+import html
 import json
 import math
 import re
@@ -637,154 +638,110 @@ if st.session_state.get("observation_results") is not None:
     st.divider()
     st.subheader("參、觀察紀錄結果")
 
-    st.markdown("#### 表格預覽")
+st.markdown("#### 表格預覽")
 
-    display_df = final_df.copy()
-    display_df["日期"] = pd.to_datetime(
-        display_df["日期"]
-    ).dt.strftime("%Y/%m/%d")
+display_df = final_df.copy()
+display_df["日期"] = pd.to_datetime(
+    display_df["日期"]
+).dt.strftime("%Y/%m/%d")
 
-    # 使用固定欄寬＋自動換行的 HTML 表格，
-    # 讓姓名、日期、發展領域、觀察紀錄都能在同一個視窗內完整閱讀，
-    # 不需要左右拖曳。
-    st.markdown(
-        """
-        <style>
-        .obs-table-wrap {
-            width: 100%;
-            overflow-x: hidden;
-            margin-top: 0.5rem;
-            margin-bottom: 1rem;
-        }
+# CSS：讓表格固定在同一個視窗內，不需要左右拖曳
+css = """
+<style>
+.obs-table-wrap {
+    width: 100%;
+    overflow-x: hidden;
+    margin-top: .4rem;
+    margin-bottom: 1rem;
+}
 
-        table.obs-table {
-            width: 100%;
-            table-layout: fixed;
-            border-collapse: collapse;
-            font-size: 0.93rem;
-            line-height: 1.55;
-        }
+.obs-table {
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+    font-size: 15px;
+    line-height: 1.55;
+}
 
-        table.obs-table th {
-            background: #1F4E78;
-            color: white;
-            font-weight: 700;
-            text-align: center;
-            padding: 10px 8px;
-            border: 1px solid #D9E2F3;
-        }
+.obs-table th {
+    background: #1F4E78;
+    color: white;
+    font-weight: 700;
+    text-align: center;
+    padding: 9px 7px;
+    border: 1px solid #D9E2F3;
+}
 
-        table.obs-table td {
-            padding: 10px 8px;
-            border: 1px solid #D9E2F3;
-            vertical-align: top;
-            white-space: normal !important;
-            word-break: break-word;
-            overflow-wrap: anywhere;
-        }
+.obs-table td {
+    padding: 9px 7px;
+    border: 1px solid #D9E2F3;
+    vertical-align: top;
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+}
 
-        table.obs-table th:nth-child(1),
-        table.obs-table td:nth-child(1) {
-            width: 12%;
-            text-align: center;
-        }
+.obs-table th:nth-child(1),
+.obs-table td:nth-child(1) {
+    width: 11%;
+    text-align: center;
+}
 
-        table.obs-table th:nth-child(2),
-        table.obs-table td:nth-child(2) {
-            width: 12%;
-            text-align: center;
-        }
+.obs-table th:nth-child(2),
+.obs-table td:nth-child(2) {
+    width: 12%;
+    text-align: center;
+}
 
-        table.obs-table th:nth-child(3),
-        table.obs-table td:nth-child(3) {
-            width: 14%;
-            text-align: center;
-        }
+.obs-table th:nth-child(3),
+.obs-table td:nth-child(3) {
+    width: 13%;
+    text-align: center;
+}
 
-        table.obs-table th:nth-child(4),
-        table.obs-table td:nth-child(4) {
-            width: 62%;
-        }
+.obs-table th:nth-child(4),
+.obs-table td:nth-child(4) {
+    width: 64%;
+}
 
-        table.obs-table tbody tr:nth-child(even) {
-            background: #F8FAFC;
-        }
+.obs-table tbody tr:nth-child(even) {
+    background: #F7F9FC;
+}
+</style>
+"""
 
-        @media (max-width: 900px) {
-            table.obs-table {
-                font-size: 0.84rem;
-            }
+st.markdown(css, unsafe_allow_html=True)
 
-            table.obs-table th,
-            table.obs-table td {
-                padding: 8px 6px;
-            }
+rows_html = []
 
-            table.obs-table th:nth-child(1),
-            table.obs-table td:nth-child(1) {
-                width: 13%;
-            }
-
-            table.obs-table th:nth-child(2),
-            table.obs-table td:nth-child(2) {
-                width: 15%;
-            }
-
-            table.obs-table th:nth-child(3),
-            table.obs-table td:nth-child(3) {
-                width: 16%;
-            }
-
-            table.obs-table th:nth-child(4),
-            table.obs-table td:nth-child(4) {
-                width: 56%;
-            }
-        }
-        </style>
-        """,
-        unsafe_allow_html=True,
+for _, row in display_df.iterrows():
+    rows_html.append(
+        "<tr>"
+        f"<td>{html.escape(str(row['姓名']))}</td>"
+        f"<td>{html.escape(str(row['日期']))}</td>"
+        f"<td>{html.escape(str(row['發展領域']))}</td>"
+        f"<td>{html.escape(str(row['觀察紀錄']))}</td>"
+        "</tr>"
     )
 
-    html_rows = []
-    for _, row in display_df.iterrows():
-        name = str(row["姓名"]).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-        date_text = str(row["日期"]).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-        domain = str(row["發展領域"]).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-        observation = str(row["觀察紀錄"]).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+table_html = (
+    '<div class="obs-table-wrap">'
+    '<table class="obs-table">'
+    '<thead><tr>'
+    '<th>姓名</th>'
+    '<th>日期</th>'
+    '<th>發展領域</th>'
+    '<th>觀察紀錄</th>'
+    '</tr></thead>'
+    '<tbody>'
+    + "".join(rows_html)
+    + '</tbody></table></div>'
+)
 
-        html_rows.append(
-            f"""
-            <tr>
-                <td>{name}</td>
-                <td>{date_text}</td>
-                <td>{domain}</td>
-                <td>{observation}</td>
-            </tr>
-            """
-        )
-
-    table_html = f"""
-    <div class="obs-table-wrap">
-        <table class="obs-table">
-            <thead>
-                <tr>
-                    <th>姓名</th>
-                    <th>日期</th>
-                    <th>發展領域</th>
-                    <th>觀察紀錄</th>
-                </tr>
-            </thead>
-            <tbody>
-                {''.join(html_rows)}
-            </tbody>
-        </table>
-    </div>
-    """
-
-    st.markdown(table_html, unsafe_allow_html=True)
-
-    st.divider()
-    st.subheader("肆、下載 Excel")
+st.markdown(
+    table_html,
+    unsafe_allow_html=True
+)
 
     excel_bytes = export_excel_bytes(final_df)
 
