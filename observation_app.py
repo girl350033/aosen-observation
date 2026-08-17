@@ -614,7 +614,7 @@ if source_df is not None and len(source_df) > 0:
             st.error("請先輸入 OpenAI API Key。")
         else:
             try:
-                with st.spinner("正在整理觀察紀錄…"):
+                with st.spinner("AI 正在整理觀察紀錄…"):
                     final_df = generate_all_observations(
                         source_df,
                         api_key,
@@ -638,110 +638,97 @@ if st.session_state.get("observation_results") is not None:
     st.divider()
     st.subheader("參、觀察紀錄結果")
 
-st.markdown("#### 表格預覽")
+    st.markdown("#### 表格預覽")
 
-display_df = final_df.copy()
-display_df["日期"] = pd.to_datetime(
-    display_df["日期"]
-).dt.strftime("%Y/%m/%d")
+    display_df = final_df.copy()
+    display_df["日期"] = pd.to_datetime(
+        display_df["日期"]
+    ).dt.strftime("%Y/%m/%d")
 
-# CSS：讓表格固定在同一個視窗內，不需要左右拖曳
-css = """
-<style>
-.obs-table-wrap {
-    width: 100%;
-    overflow-x: hidden;
-    margin-top: .4rem;
-    margin-bottom: 1rem;
-}
+    # 直接組成「單行 HTML」交給 Streamlit，避免 Markdown
+    # 把縮排後的 <tr>/<td> 誤判成程式碼區塊。
+    css = """
+    <style>
+    .obs-table-wrap {
+        width: 100%;
+        overflow-x: hidden;
+        margin-top: .4rem;
+        margin-bottom: 1rem;
+    }
+    .obs-table {
+        width: 100%;
+        table-layout: fixed;
+        border-collapse: collapse;
+        font-size: 15px;
+        line-height: 1.55;
+    }
+    .obs-table th {
+        background: #1F4E78;
+        color: #fff;
+        font-weight: 700;
+        text-align: center;
+        padding: 9px 7px;
+        border: 1px solid #D9E2F3;
+    }
+    .obs-table td {
+        padding: 9px 7px;
+        border: 1px solid #D9E2F3;
+        vertical-align: top;
+        white-space: normal;
+        word-break: break-word;
+        overflow-wrap: anywhere;
+    }
+    .obs-table th:nth-child(1), .obs-table td:nth-child(1) {
+        width: 11%;
+        text-align: center;
+    }
+    .obs-table th:nth-child(2), .obs-table td:nth-child(2) {
+        width: 12%;
+        text-align: center;
+    }
+    .obs-table th:nth-child(3), .obs-table td:nth-child(3) {
+        width: 13%;
+        text-align: center;
+    }
+    .obs-table th:nth-child(4), .obs-table td:nth-child(4) {
+        width: 64%;
+    }
+    .obs-table tbody tr:nth-child(even) {
+        background: #F7F9FC;
+    }
+    </style>
+    """
+    st.markdown(css, unsafe_allow_html=True)
 
-.obs-table {
-    width: 100%;
-    table-layout: fixed;
-    border-collapse: collapse;
-    font-size: 15px;
-    line-height: 1.55;
-}
+    rows_html = []
+    for _, row in display_df.iterrows():
+        rows_html.append(
+            "<tr>"
+            f"<td>{html.escape(str(row['姓名']))}</td>"
+            f"<td>{html.escape(str(row['日期']))}</td>"
+            f"<td>{html.escape(str(row['發展領域']))}</td>"
+            f"<td>{html.escape(str(row['觀察紀錄']))}</td>"
+            "</tr>"
+        )
 
-.obs-table th {
-    background: #1F4E78;
-    color: white;
-    font-weight: 700;
-    text-align: center;
-    padding: 9px 7px;
-    border: 1px solid #D9E2F3;
-}
-
-.obs-table td {
-    padding: 9px 7px;
-    border: 1px solid #D9E2F3;
-    vertical-align: top;
-    white-space: normal;
-    word-break: break-word;
-    overflow-wrap: anywhere;
-}
-
-.obs-table th:nth-child(1),
-.obs-table td:nth-child(1) {
-    width: 11%;
-    text-align: center;
-}
-
-.obs-table th:nth-child(2),
-.obs-table td:nth-child(2) {
-    width: 12%;
-    text-align: center;
-}
-
-.obs-table th:nth-child(3),
-.obs-table td:nth-child(3) {
-    width: 13%;
-    text-align: center;
-}
-
-.obs-table th:nth-child(4),
-.obs-table td:nth-child(4) {
-    width: 64%;
-}
-
-.obs-table tbody tr:nth-child(even) {
-    background: #F7F9FC;
-}
-</style>
-"""
-
-st.markdown(css, unsafe_allow_html=True)
-
-rows_html = []
-
-for _, row in display_df.iterrows():
-    rows_html.append(
-        "<tr>"
-        f"<td>{html.escape(str(row['姓名']))}</td>"
-        f"<td>{html.escape(str(row['日期']))}</td>"
-        f"<td>{html.escape(str(row['發展領域']))}</td>"
-        f"<td>{html.escape(str(row['觀察紀錄']))}</td>"
-        "</tr>"
+    table_html = (
+        '<div class="obs-table-wrap">'
+        '<table class="obs-table">'
+        '<thead><tr>'
+        '<th>姓名</th>'
+        '<th>日期</th>'
+        '<th>發展領域</th>'
+        '<th>觀察紀錄</th>'
+        '</tr></thead>'
+        '<tbody>'
+        + "".join(rows_html)
+        + '</tbody></table></div>'
     )
 
-table_html = (
-    '<div class="obs-table-wrap">'
-    '<table class="obs-table">'
-    '<thead><tr>'
-    '<th>姓名</th>'
-    '<th>日期</th>'
-    '<th>發展領域</th>'
-    '<th>觀察紀錄</th>'
-    '</tr></thead>'
-    '<tbody>'
-    + "".join(rows_html)
-    + '</tbody></table></div>'
-)
+    st.markdown(table_html, unsafe_allow_html=True)
 
-st.markdown(
-    table_html,
-    unsafe_allow_html=True
-)
+    st.divider()
+    st.subheader("肆、下載 Excel")
 
     excel_bytes = export_excel_bytes(final_df)
 
