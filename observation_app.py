@@ -61,7 +61,7 @@ def clean_text(value):
 
 def chinese_char_count(text):
     """
-    計算「」的大致中文字數。
+    計算「觀察紀錄」的大致中文字數。
     排除空白與換行，但保留中文、英文、數字與標點。
     """
     return len(re.sub(r"\s+", "", str(text or "")))
@@ -133,7 +133,7 @@ def load_uploaded_excel(uploaded_file):
     - 老師的話
 
     若檔案中另有「姓名、生日、年齡」工作表，
-    會自動計算每筆紀錄在當日的月齡，作為 AI 適齡判斷參考。
+    會自動計算每筆紀錄在當日的月齡，作為適齡判斷參考。
     """
     data = uploaded_file.getvalue()
     xls = pd.ExcelFile(io.BytesIO(data))
@@ -507,7 +507,7 @@ def export_excel_bytes(final_df):
 # UI
 # ============================================================
 
-st.title("📝 澳森托嬰中心｜觀察紀錄")
+st.title("📝 澳森托嬰中心｜幼兒觀察紀錄")
 
 st.markdown(
     "上傳老師紀錄 Excel 後，系統會讀取 **姓名、日期、老師的話**，"
@@ -572,12 +572,12 @@ if uploaded_file is not None:
 
 
 # ---------------------------
-# 貳、AI 設定
+# 貳、設定
 # ---------------------------
 
 if source_df is not None and len(source_df) > 0:
     st.divider()
-    st.subheader("貳、AI 生成設定")
+    st.subheader("貳、生成設定")
 
     api_key = st.text_input(
         "OpenAI API Key",
@@ -613,7 +613,7 @@ if source_df is not None and len(source_df) > 0:
             st.error("請先輸入 OpenAI API Key。")
         else:
             try:
-                with st.spinner("AI 正在整理觀察紀錄…"):
+                with st.spinner("正在整理觀察紀錄…"):
                     final_df = generate_all_observations(
                         source_df,
                         api_key,
@@ -637,40 +637,151 @@ if st.session_state.get("observation_results") is not None:
     st.divider()
     st.subheader("參、觀察紀錄結果")
 
-    st.markdown("#### 表格呈現")
+    st.markdown("#### 表格預覽")
 
     display_df = final_df.copy()
     display_df["日期"] = pd.to_datetime(
         display_df["日期"]
     ).dt.strftime("%Y/%m/%d")
 
-    st.dataframe(
-        display_df,
-        use_container_width=True,
-        hide_index=True,
-        height=460,
-        column_config={
-            "姓名": st.column_config.TextColumn(width="small"),
-            "日期": st.column_config.TextColumn(width="small"),
-            "發展領域": st.column_config.TextColumn(width="small"),
-            "觀察紀錄": st.column_config.TextColumn(width="large"),
-        },
+    # 使用固定欄寬＋自動換行的 HTML 表格，
+    # 讓姓名、日期、發展領域、觀察紀錄都能在同一個視窗內完整閱讀，
+    # 不需要左右拖曳。
+    st.markdown(
+        """
+        <style>
+        .obs-table-wrap {
+            width: 100%;
+            overflow-x: hidden;
+            margin-top: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        table.obs-table {
+            width: 100%;
+            table-layout: fixed;
+            border-collapse: collapse;
+            font-size: 0.93rem;
+            line-height: 1.55;
+        }
+
+        table.obs-table th {
+            background: #1F4E78;
+            color: white;
+            font-weight: 700;
+            text-align: center;
+            padding: 10px 8px;
+            border: 1px solid #D9E2F3;
+        }
+
+        table.obs-table td {
+            padding: 10px 8px;
+            border: 1px solid #D9E2F3;
+            vertical-align: top;
+            white-space: normal !important;
+            word-break: break-word;
+            overflow-wrap: anywhere;
+        }
+
+        table.obs-table th:nth-child(1),
+        table.obs-table td:nth-child(1) {
+            width: 12%;
+            text-align: center;
+        }
+
+        table.obs-table th:nth-child(2),
+        table.obs-table td:nth-child(2) {
+            width: 12%;
+            text-align: center;
+        }
+
+        table.obs-table th:nth-child(3),
+        table.obs-table td:nth-child(3) {
+            width: 14%;
+            text-align: center;
+        }
+
+        table.obs-table th:nth-child(4),
+        table.obs-table td:nth-child(4) {
+            width: 62%;
+        }
+
+        table.obs-table tbody tr:nth-child(even) {
+            background: #F8FAFC;
+        }
+
+        @media (max-width: 900px) {
+            table.obs-table {
+                font-size: 0.84rem;
+            }
+
+            table.obs-table th,
+            table.obs-table td {
+                padding: 8px 6px;
+            }
+
+            table.obs-table th:nth-child(1),
+            table.obs-table td:nth-child(1) {
+                width: 13%;
+            }
+
+            table.obs-table th:nth-child(2),
+            table.obs-table td:nth-child(2) {
+                width: 15%;
+            }
+
+            table.obs-table th:nth-child(3),
+            table.obs-table td:nth-child(3) {
+                width: 16%;
+            }
+
+            table.obs-table th:nth-child(4),
+            table.obs-table td:nth-child(4) {
+                width: 56%;
+            }
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
     )
 
-    st.markdown("#### 文字呈現")
+    html_rows = []
+    for _, row in display_df.iterrows():
+        name = str(row["姓名"]).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+        date_text = str(row["日期"]).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+        domain = str(row["發展領域"]).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+        observation = str(row["觀察紀錄"]).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
-    for idx, row in display_df.iterrows():
-        count = chinese_char_count(row["觀察紀錄"])
+        html_rows.append(
+            f"""
+            <tr>
+                <td>{name}</td>
+                <td>{date_text}</td>
+                <td>{domain}</td>
+                <td>{observation}</td>
+            </tr>
+            """
+        )
 
-        with st.expander(
-            f"{row['姓名']}｜{row['日期']}｜{row['發展領域']}｜約 {count} 字",
-            expanded=False,
-        ):
-            st.markdown(f"**姓名：** {row['姓名']}")
-            st.markdown(f"**日期：** {row['日期']}")
-            st.markdown(f"**發展領域：** {row['發展領域']}")
-            st.markdown("**觀察紀錄：**")
-            st.write(row["觀察紀錄"])
+    table_html = f"""
+    <div class="obs-table-wrap">
+        <table class="obs-table">
+            <thead>
+                <tr>
+                    <th>姓名</th>
+                    <th>日期</th>
+                    <th>發展領域</th>
+                    <th>觀察紀錄</th>
+                </tr>
+            </thead>
+            <tbody>
+                {''.join(html_rows)}
+            </tbody>
+        </table>
+    </div>
+    """
+
+    st.markdown(table_html, unsafe_allow_html=True)
 
     st.divider()
     st.subheader("肆、下載 Excel")
@@ -678,9 +789,9 @@ if st.session_state.get("observation_results") is not None:
     excel_bytes = export_excel_bytes(final_df)
 
     st.download_button(
-        "📥 下載【AI幼兒觀察紀錄.xlsx】",
+        "📥 下載【幼兒觀察紀錄.xlsx】",
         data=excel_bytes,
-        file_name="AI幼兒觀察紀錄.xlsx",
+        file_name="幼兒觀察紀錄.xlsx",
         mime=(
             "application/vnd.openxmlformats-officedocument."
             "spreadsheetml.sheet"
