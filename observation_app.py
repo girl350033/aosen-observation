@@ -61,7 +61,7 @@ def clean_text(value):
 
 def chinese_char_count(text):
     """
-    計算「觀察紀錄」的大致中文字數。
+    計算「」的大致中文字數。
     排除空白與換行，但保留中文、英文、數字與標點。
     """
     return len(re.sub(r"\s+", "", str(text or "")))
@@ -507,7 +507,7 @@ def export_excel_bytes(final_df):
 # UI
 # ============================================================
 
-st.title("📝 澳森托嬰中心｜AI 幼兒觀察紀錄產生器")
+st.title("📝 澳森托嬰中心｜觀察紀錄")
 
 st.markdown(
     "上傳老師紀錄 Excel 後，系統會讀取 **姓名、日期、老師的話**，"
