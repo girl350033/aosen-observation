@@ -369,7 +369,7 @@ def generate_all_observations(df, api_key, model, batch_size=8):
         batch_df = df.iloc[start:end]
 
         status.write(
-            f"AI 生成中：第 {start + 1}～{end} 筆，共 {total} 筆"
+            f"生成中：第 {start + 1}～{end} 筆，共 {total} 筆"
         )
 
         batch_results = generate_batch(client, model, batch_df)
@@ -511,9 +511,9 @@ def export_excel_bytes(final_df):
 st.title("📝 澳森托嬰中心｜幼兒觀察紀錄")
 
 st.markdown(
-    "上傳老師紀錄 Excel 後，系統會讀取 **姓名、日期、老師的話**，"
-    "若檔案中另有生日／年齡資料，也會自動計算月齡作為適齡參考。"
-    "AI 最後只輸出 **發展領域＋80～100字左右觀察紀錄**。"
+    "將已整理過的老師的話Excel上傳-每位幼兒兩則，系統會讀取 **姓名、日期、老師的話**，"
+    "貼上API及選擇模組後按產生，即可預覽及下載excel觀察紀錄"
+    "。"
 )
 
 st.info(
@@ -606,7 +606,7 @@ if source_df is not None and len(source_df) > 0:
         st.session_state.observation_results = None
 
     if st.button(
-        f"✨ AI 生成 {len(source_df)} 筆觀察紀錄",
+        f"✨ 生成 {len(source_df)} 筆觀察紀錄",
         type="primary",
         use_container_width=True,
     ):
