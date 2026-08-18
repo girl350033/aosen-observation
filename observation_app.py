@@ -17,7 +17,7 @@ from openpyxl.utils import get_column_letter
 # ============================================================
 
 st.set_page_config(
-    page_title="澳森托嬰中心｜觀察紀錄",
+    page_title="托嬰中心｜觀察紀錄",
     page_icon="📝",
     layout="wide",
     initial_sidebar_state="collapsed",
@@ -508,7 +508,7 @@ def export_excel_bytes(final_df):
 # UI
 # ============================================================
 
-st.title("📝 澳森托嬰中心｜幼兒觀察紀錄")
+st.title("📝 托嬰中心｜觀察紀錄")
 
 st.markdown(
     "將已整理過的老師的話Excel上傳-每位幼兒兩則，系統會讀取 **姓名、日期、老師的話**，"
